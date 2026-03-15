@@ -7,9 +7,10 @@ function RootRedirect() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedGameId = localStorage.getItem("game_id");
-    if (savedGameId) {
-      navigate(`/game/${savedGameId}`, { replace: true });
+    const raw = localStorage.getItem("wordle_games");
+    const hasGame = raw && Object.keys(JSON.parse(raw)).length > 0;
+    if (hasGame) {
+      navigate("/game", { replace: true });
     }
   }, [navigate]);
 
@@ -20,7 +21,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
-      <Route path="/game/:id" element={<GamePage />} />
+      <Route path="/game" element={<GamePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

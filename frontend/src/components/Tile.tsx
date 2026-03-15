@@ -17,6 +17,14 @@ const stateStyles: Record<TileState, string> = {
   gray: "bg-[var(--tile-gray)] border-2 border-[var(--tile-gray)] text-white",
 };
 
+const targetColors: Record<TileState, string> = {
+  empty: "var(--tile-empty)",
+  filled: "var(--tile-empty)",
+  green: "var(--tile-green)",
+  yellow: "var(--tile-yellow)",
+  gray: "var(--tile-gray)",
+};
+
 export function Tile({ letter, state, flipDelay = 0, isRevealing = false }: TileProps) {
   return (
     <div
@@ -24,12 +32,17 @@ export function Tile({ letter, state, flipDelay = 0, isRevealing = false }: Tile
         "flex items-center justify-center",
         "w-14 h-14 text-2xl font-bold uppercase select-none",
         "transition-transform",
-        stateStyles[state],
+        // While revealing, show the pre-flip (filled) appearance so the color
+        // is hidden until the animation snaps it in at the 50% keyframe.
+        isRevealing ? stateStyles["filled"] : stateStyles[state],
         isRevealing && "tile-flip"
       )}
       style={
         isRevealing
-          ? ({ "--flip-delay": `${flipDelay}ms` } as React.CSSProperties)
+          ? ({
+              "--flip-delay": `${flipDelay}ms`,
+              "--target-color": targetColors[state],
+            } as React.CSSProperties)
           : undefined
       }
     >

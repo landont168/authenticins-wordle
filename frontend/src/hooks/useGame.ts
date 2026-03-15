@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getGame, submitGuess } from "@/api/client";
 import { GameStateResponse, GuessRecord } from "@/lib/schemas";
@@ -10,7 +9,6 @@ export type { LetterStatus };
 
 export function useGame(gameId: string) {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const [currentInput, setCurrentInput] = useState("");
   const [shaking, setShaking] = useState(false);
@@ -131,19 +129,17 @@ export function useGame(gameId: string) {
   }, [handleKey]);
 
   // ---------------------------------------------------------------------------
-  // New game
-  // ---------------------------------------------------------------------------
-
-  const handleNewGame = useCallback(() => {
-    localStorage.removeItem("game_id");
-    navigate("/");
-  }, [navigate]);
-
-  // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
 
-  const letterStatuses = gameState ? getLetterStatuses(gameState.guesses) : {};
+  // Exclude the currently-animating row so keyboard colors only update
+  // after all tiles in that row have finished flipping.
+  const revealedGuesses = gameState
+    ? gameState.guesses.filter(
+        (_, i) => revealingRowIndex === null || i < revealingRowIndex
+      )
+    : [];
+  const letterStatuses = getLetterStatuses(revealedGuesses);
 
   return {
     gameState,
@@ -154,7 +150,6 @@ export function useGame(gameId: string) {
     revealingRowIndex,
     letterStatuses,
     handleKey,
-    handleNewGame,
     isSubmitting: guessMutation.isPending,
   };
 }

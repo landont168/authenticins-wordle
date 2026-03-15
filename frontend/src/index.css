@@ -69,23 +69,29 @@
 @keyframes tile-flip {
   0% {
     transform: rotateX(0deg);
-    background-color: var(--tile-empty);
-    border-color: var(--tile-filled-border);
-    color: inherit;
   }
   49% {
     transform: rotateX(-90deg);
   }
+  /* Tile is edge-on here — snap to the revealed color before rotating back */
   50% {
     transform: rotateX(-90deg);
+    background-color: var(--target-color);
+    border-color: var(--target-color);
+    color: white;
   }
   100% {
     transform: rotateX(0deg);
+    background-color: var(--target-color);
+    border-color: var(--target-color);
+    color: white;
   }
 }
 
 .tile-flip {
-  animation: tile-flip 0.5s ease-in-out forwards;
+  /* "both" applies the 0% keyframe during the delay (backwards) and keeps
+     the 100% keyframe after the animation ends (forwards) */
+  animation: tile-flip 0.5s ease-in-out both;
   animation-delay: var(--flip-delay, 0ms);
   backface-visibility: hidden;
 }
