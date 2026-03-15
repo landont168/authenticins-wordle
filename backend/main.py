@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from routers.games import router as games_router
 
-# Configure CORS
+app = FastAPI(title="Wordle API")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -12,10 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello World"}
+app.include_router(games_router)
 
 
 @app.get("/health")
