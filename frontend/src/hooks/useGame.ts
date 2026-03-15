@@ -10,7 +10,10 @@ export type { LetterStatus };
 export function useGame(gameId: string) {
   const queryClient = useQueryClient();
 
-  const [currentInput, setCurrentInput] = useState("");
+  const inputKey = `wordle_input_${gameId}`;
+  const [currentInput, setCurrentInput] = useState(
+    () => localStorage.getItem(inputKey) ?? ""
+  );
   const [shaking, setShaking] = useState(false);
   const [revealingRowIndex, setRevealingRowIndex] = useState<number | null>(null);
   const blockInput = useRef(false);
@@ -55,6 +58,7 @@ export function useGame(gameId: string) {
         });
       }
 
+      localStorage.removeItem(inputKey);
       setCurrentInput("");
       setRevealingRowIndex(newRowIndex);
 
@@ -65,8 +69,6 @@ export function useGame(gameId: string) {
 
         if (data.status === "won") {
           toast.success("Brilliant! You got it! 🎉");
-        } else if (data.status === "lost") {
-          toast.error(`The word was ${data.word ?? ""}`, { duration: 6000 });
         }
       }, duration);
     },
@@ -107,9 +109,17 @@ export function useGame(gameId: string) {
         }
         guessMutation.mutate(currentInput);
       } else if (key === "Backspace") {
-        setCurrentInput((prev) => prev.slice(0, -1));
+        setCurrentInput((prev) => {
+          const next = prev.slice(0, -1);
+          localStorage.setItem(inputKey, next);
+          return next;
+        });
       } else if (/^[a-zA-Z]$/.test(key) && currentInput.length < wordLength) {
-        setCurrentInput((prev) => prev + key.toUpperCase());
+        setCurrentInput((prev) => {
+          const next = prev + key.toUpperCase();
+          localStorage.setItem(inputKey, next);
+          return next;
+        });
       }
     },
     [gameState, currentInput, guessMutation]

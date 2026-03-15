@@ -1,18 +1,20 @@
 import { useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { SetupPage } from "./pages/SetupPage";
 import { GamePage } from "./pages/GamePage";
+import { loadGameIds } from "./lib/gameStorage";
 
 function RootRedirect() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const raw = localStorage.getItem("wordle_games");
-    const hasGame = raw && Object.keys(JSON.parse(raw)).length > 0;
+    if (location.state?.skipRedirect) return;
+    const hasGame = Object.keys(loadGameIds()).length > 0;
     if (hasGame) {
       navigate("/game", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, location.state]);
 
   return <SetupPage />;
 }

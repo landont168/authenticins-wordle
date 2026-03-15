@@ -96,6 +96,16 @@
   backface-visibility: hidden;
 }
 
+/* Answer popup fade-in */
+@keyframes answer-popup {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.answer-popup {
+  animation: answer-popup 0.2s ease-out forwards;
+}
+
 /* Shake animation for invalid word */
 @keyframes row-shake {
   0%, 100% { transform: translateX(0); }

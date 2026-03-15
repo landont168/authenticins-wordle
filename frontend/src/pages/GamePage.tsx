@@ -1,74 +1,31 @@
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { Navigate, useNavigate } from "react-router-dom";
 import { GameBoard } from "@/components/GameBoard";
 import { Keyboard } from "@/components/Keyboard";
 import { Button } from "@/components/ui/button";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
 import { useGame } from "@/hooks/useGame";
-import { createGame } from "@/api/client";
+import { useGameSession, WordLength, GameIds } from "@/hooks/useGameSession";
+import { WORD_LENGTHS } from "@/lib/gameStorage";
 import { cn } from "@/lib/utils";
 
 const HOW_TO_PLAY_KEY = "wordle_how_to_play_seen";
-const WORD_LENGTHS = [5, 6, 7, 8] as const;
-type WordLength = (typeof WORD_LENGTHS)[number];
-type GameIds = Partial<Record<WordLength, string>>;
-
-function loadGameIds(): GameIds {
-  try {
-    // Clean up legacy single-game key — word length was unknown so we can't
-    // safely slot it into the map without risking a length mismatch.
-    localStorage.removeItem("game_id");
-    const raw = localStorage.getItem("wordle_games");
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveGameIds(ids: GameIds) {
-  localStorage.setItem("wordle_games", JSON.stringify(ids));
-}
 
 // ---------------------------------------------------------------------------
-// GamePage — owns game ID map and active length, handles all creation logic
+// GamePage — owns session state, delegates UI to GameView
 // ---------------------------------------------------------------------------
 
 export function GamePage() {
-  const [gameIds, setGameIds] = useState<GameIds>(loadGameIds);
-  const [activeLength, setActiveLength] = useState<WordLength>(() => {
-    const stored = Number(localStorage.getItem("wordle_active_length"));
-    return (WORD_LENGTHS.includes(stored as WordLength) ? stored : 5) as WordLength;
-  });
+  const {
+    gameIds,
+    activeLength,
+    activeGameId,
+    isSwitching,
+    handleSwitchMode,
+    handleNewGame,
+  } = useGameSession();
 
-  const createMutation = useMutation({
-    mutationFn: (length: WordLength) => createGame(length),
-    onSuccess: (data, length) => {
-      const next = { ...gameIds, [length]: data.game_id };
-      saveGameIds(next);
-      localStorage.setItem("wordle_active_length", String(length));
-      setGameIds(next);
-      setActiveLength(length);
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
-
-  function handleSwitchMode(length: WordLength) {
-    localStorage.setItem("wordle_active_length", String(length));
-    setActiveLength(length);
-    if (!gameIds[length]) {
-      createMutation.mutate(length);
-    }
-  }
-
-  function handleNewGame() {
-    createMutation.mutate(activeLength);
-  }
-
-  const gameId = gameIds[activeLength] ?? null;
-
-  if (createMutation.isPending && !gameId) {
+  if (isSwitching && !activeGameId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         Starting game…
@@ -76,41 +33,45 @@ export function GamePage() {
     );
   }
 
-  if (!gameId) return <Navigate to="/" replace />;
+  if (!activeGameId) return <Navigate to="/" replace />;
 
   return (
     <GameView
-      key={gameId}
-      gameId={gameId}
+      key={activeGameId}
+      gameId={activeGameId}
       activeLength={activeLength}
       gameIds={gameIds}
+      isSwitching={isSwitching}
       onSwitchMode={handleSwitchMode}
       onNewGame={handleNewGame}
-      isSwitching={createMutation.isPending}
     />
   );
 }
 
 // ---------------------------------------------------------------------------
-// GameView — pure game UI, no creation logic
+// GameView — pure UI, no mutation or session logic
 // ---------------------------------------------------------------------------
+
+interface GameViewProps {
+  gameId: string;
+  activeLength: WordLength;
+  gameIds: GameIds;
+  isSwitching: boolean;
+  onSwitchMode: (length: WordLength) => void;
+  onNewGame: () => void;
+}
 
 function GameView({
   gameId,
   activeLength,
   gameIds,
+  isSwitching,
   onSwitchMode,
   onNewGame,
-  isSwitching,
-}: {
-  gameId: string;
-  activeLength: WordLength;
-  gameIds: GameIds;
-  onSwitchMode: (length: WordLength) => void;
-  onNewGame: () => void;
-  isSwitching: boolean;
-}) {
+}: GameViewProps) {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!localStorage.getItem(HOW_TO_PLAY_KEY)) {
@@ -135,9 +96,7 @@ function GameView({
     isSubmitting,
   } = useGame(gameId);
 
-  // Guard: stored game ID belongs to a different word length (e.g. stale data).
-  // Kick off a fresh game for the correct length instead of rendering a
-  // mismatched board.
+  // Stale game: stored ID belongs to a different word length — replace it.
   if (gameState && gameState.word_length !== activeLength) {
     onNewGame();
     return null;
@@ -161,6 +120,7 @@ function GameView({
   }
 
   const isGameOver = gameState.status !== "in_progress";
+  const animationDone = revealingRowIndex === null;
 
   return (
     <div className="min-h-screen flex flex-col items-center gap-4 p-4 bg-background">
@@ -169,8 +129,11 @@ function GameView({
       {/* Header */}
       <header className="w-full max-w-lg border-b border-border pb-3 grid grid-cols-3 items-center">
         <div />
-        <h1 className="text-2xl font-black tracking-widest text-foreground text-center">
-          Wordle
+        <h1
+          className="text-2xl font-black tracking-widest text-foreground text-center"
+          onClick={() => navigate("/", { state: { skipRedirect: true } })}
+        >
+          <span className="cursor-pointer">Wordle</span>
         </h1>
         <div className="flex items-center justify-end gap-0.5">
           {WORD_LENGTHS.map((n) => (
@@ -184,9 +147,8 @@ function GameView({
                   ? "bg-foreground text-background"
                   : cn(
                       "text-muted-foreground hover:text-foreground hover:bg-muted",
-                      // Dot indicator for lengths that have a saved game
-                      gameIds[n] && "underline decoration-dotted"
-                    )
+                      gameIds[n] && "underline decoration-dotted",
+                    ),
               )}
             >
               {n}
@@ -195,27 +157,23 @@ function GameView({
         </div>
       </header>
 
-      {/* Game over banner */}
-      {isGameOver && (
-        <div className="w-full max-w-lg rounded-lg border bg-muted px-4 py-3 flex items-center justify-between gap-4">
-          <div>
-            {gameState.status === "won" ? (
-              <p className="font-semibold text-[var(--tile-green)]">
-                You won! 🎉
-              </p>
-            ) : (
-              <p className="font-semibold text-foreground">
-                The word was{" "}
-                <span className="font-black tracking-widest">
-                  {gameState.word}
-                </span>
-              </p>
-            )}
-          </div>
-          <Button size="sm" onClick={onNewGame} disabled={isSwitching}>
-            New Game
-          </Button>
+      {/* Loss answer popup */}
+      {gameState.status === "lost" && animationDone && (
+        <div className="bg-foreground text-background text-sm font-bold px-4 py-2 rounded-lg shadow-md tracking-widest uppercase answer-popup">
+          {gameState.word}
         </div>
+      )}
+
+      {/* New game button */}
+      {isGameOver && animationDone && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onNewGame}
+          disabled={isSwitching}
+        >
+          New Game
+        </Button>
       )}
 
       {/* Board */}
@@ -235,7 +193,7 @@ function GameView({
         <Keyboard
           letterStatuses={letterStatuses}
           onKey={handleKey}
-          disabled={isGameOver || isSubmitting || revealingRowIndex !== null}
+          disabled={isGameOver || isSubmitting || !animationDone}
         />
       </div>
     </div>
