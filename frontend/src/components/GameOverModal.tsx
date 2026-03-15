@@ -80,7 +80,7 @@ export function GameOverModal({
         "rounded-xl border border-border bg-background text-foreground shadow-xl",
         "w-full max-w-xs mx-auto p-0",
         "backdrop:bg-black/50",
-        "open:animate-in open:fade-in-0 open:zoom-in-95"
+        "modal-fade-in"
       )}
     >
       <div className="flex flex-col">

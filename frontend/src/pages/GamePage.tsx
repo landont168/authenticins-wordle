@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { RotateCcw } from "lucide-react";
 import { GameBoard } from "@/components/GameBoard";
@@ -108,8 +108,16 @@ function GameView({
   const isGameOver = gameState ? gameState.status !== "in_progress" : false;
   const animationDone = revealingRowIndex === null;
 
+  // Track whether this game instance was ever seen in progress, so we only
+  // trigger the game-over popup when the game actually ends — not when
+  // switching back to an already-finished game.
+  const wasInProgressRef = useRef(false);
   useEffect(() => {
-    if (isGameOver && animationDone && gameState) {
+    if (gameState?.status === "in_progress") wasInProgressRef.current = true;
+  }, [gameState?.status]);
+
+  useEffect(() => {
+    if (isGameOver && animationDone && gameState && wasInProgressRef.current) {
       const timer = setTimeout(() => setShowGameOver(true), 2000);
       return () => clearTimeout(timer);
     }
@@ -172,6 +180,13 @@ function GameView({
           ))}
         </div>
       </header>
+
+      {/* Answer pill — shown on loss */}
+      {gameState?.status === "lost" && animationDone && (
+        <div className="answer-popup fixed top-20 inset-x-0 mx-auto w-fit z-50 bg-foreground text-background text-sm font-bold px-4 py-2 rounded-lg shadow-md tracking-widest uppercase whitespace-nowrap">
+          {gameState.word}
+        </div>
+      )}
 
       {/* Board */}
       <div className="flex-1 flex items-center">
