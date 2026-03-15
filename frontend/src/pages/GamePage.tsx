@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { RotateCcw } from "lucide-react";
 import { GameBoard } from "@/components/GameBoard";
 import { Keyboard } from "@/components/Keyboard";
 import { Button } from "@/components/ui/button";
@@ -102,24 +103,7 @@ function GameView({
     return null;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        Loading game…
-      </div>
-    );
-  }
-
-  if (isError || !gameState) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-destructive font-medium">Game not found.</p>
-        <Button onClick={onNewGame}>Start New Game</Button>
-      </div>
-    );
-  }
-
-  const isGameOver = gameState.status !== "in_progress";
+  const isGameOver = gameState ? gameState.status !== "in_progress" : false;
   const animationDone = revealingRowIndex === null;
 
   return (
@@ -128,12 +112,24 @@ function GameView({
 
       {/* Header */}
       <header className="w-full max-w-lg border-b border-border pb-3 grid grid-cols-3 items-center">
-        <div />
+        <div className="flex items-center">
+          {isGameOver && animationDone && (
+            <button
+              onClick={onNewGame}
+              disabled={isSwitching}
+              title="New game"
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              <RotateCcw size={14} />
+              New Game
+            </button>
+          )}
+        </div>
         <h1
           className="text-2xl font-black tracking-widest text-foreground text-center"
           onClick={() => navigate("/", { state: { skipRedirect: true } })}
         >
-          <span className="cursor-pointer">Wordle</span>
+          <span className="cursor-pointer hover:underline">WORDLE</span>
         </h1>
         <div className="flex items-center justify-end gap-0.5">
           {WORD_LENGTHS.map((n) => (
@@ -158,34 +154,31 @@ function GameView({
       </header>
 
       {/* Loss answer popup */}
-      {gameState.status === "lost" && animationDone && (
+      {gameState?.status === "lost" && animationDone && (
         <div className="bg-foreground text-background text-sm font-bold px-4 py-2 rounded-lg shadow-md tracking-widest uppercase answer-popup">
           {gameState.word}
         </div>
       )}
 
-      {/* New game button */}
-      {isGameOver && animationDone && (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={onNewGame}
-          disabled={isSwitching}
-        >
-          New Game
-        </Button>
-      )}
-
       {/* Board */}
       <div className="flex-1 flex items-center">
-        <GameBoard
-          wordLength={gameState.word_length}
-          maxGuesses={gameState.max_guesses}
-          guesses={gameState.guesses}
-          currentInput={currentInput}
-          shaking={shaking}
-          revealingRowIndex={revealingRowIndex}
-        />
+        {isLoading ? (
+          <div className="text-muted-foreground text-sm">Loading…</div>
+        ) : isError || !gameState ? (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-destructive font-medium">Game not found.</p>
+            <Button onClick={onNewGame}>Start New Game</Button>
+          </div>
+        ) : (
+          <GameBoard
+            wordLength={gameState.word_length}
+            maxGuesses={gameState.max_guesses}
+            guesses={gameState.guesses}
+            currentInput={currentInput}
+            shaking={shaking}
+            revealingRowIndex={revealingRowIndex}
+          />
+        )}
       </div>
 
       {/* Keyboard */}
@@ -193,7 +186,7 @@ function GameView({
         <Keyboard
           letterStatuses={letterStatuses}
           onKey={handleKey}
-          disabled={isGameOver || isSubmitting || !animationDone}
+          disabled={isLoading || isGameOver || isSubmitting || !animationDone}
         />
       </div>
     </div>
