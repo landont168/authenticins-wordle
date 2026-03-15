@@ -5,6 +5,7 @@ import { GameBoard } from "@/components/GameBoard";
 import { Keyboard } from "@/components/Keyboard";
 import { Button } from "@/components/ui/button";
 import { HowToPlayModal } from "@/components/HowToPlayModal";
+import { GameOverModal } from "@/components/GameOverModal";
 import { useGame } from "@/hooks/useGame";
 import { useGameSession, WordLength, GameIds } from "@/hooks/useGameSession";
 import { WORD_LENGTHS } from "@/lib/gameStorage";
@@ -71,6 +72,7 @@ function GameView({
   onNewGame,
 }: GameViewProps) {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
 
   const navigate = useNavigate();
 
@@ -106,9 +108,27 @@ function GameView({
   const isGameOver = gameState ? gameState.status !== "in_progress" : false;
   const animationDone = revealingRowIndex === null;
 
+  useEffect(() => {
+    if (isGameOver && animationDone && gameState) {
+      const timer = setTimeout(() => setShowGameOver(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isGameOver, animationDone, gameState]);
+
   return (
     <div className="min-h-screen flex flex-col items-center gap-4 p-4 bg-background">
       <HowToPlayModal open={showHowToPlay} onClose={closeHowToPlay} />
+      {gameState &&
+        (gameState.status === "won" || gameState.status === "lost") && (
+          <GameOverModal
+            open={showGameOver}
+            onClose={() => setShowGameOver(false)}
+            status={gameState.status as "won" | "lost"}
+            guesses={gameState.guesses}
+            maxGuesses={gameState.max_guesses}
+            wordLength={gameState.word_length}
+          />
+        )}
 
       {/* Header */}
       <header className="w-full max-w-lg border-b border-border pb-3 grid grid-cols-3 items-center">
@@ -152,13 +172,6 @@ function GameView({
           ))}
         </div>
       </header>
-
-      {/* Loss answer popup */}
-      {gameState?.status === "lost" && animationDone && (
-        <div className="bg-foreground text-background text-sm font-bold px-4 py-2 rounded-lg shadow-md tracking-widest uppercase answer-popup">
-          {gameState.word}
-        </div>
-      )}
 
       {/* Board */}
       <div className="flex-1 flex items-center">
