@@ -22,7 +22,7 @@ export function SetupPage() {
         <h1 className="text-5xl font-black tracking-widest text-foreground">
           Wordle
         </h1>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-md">
           Guess the hidden word. You get{" "}
           <span className="font-semibold text-foreground">word length + 1</span>{" "}
           tries.
@@ -37,15 +37,16 @@ export function SetupPage() {
       >
         {createGame.isPending ? "Starting..." : "Play Game"}
       </Button>
-
       <div className="text-sm text-muted-foreground text-center font-bold max-w-xs space-y-1">
-        {getCurrentDate()}
+        <div className="text-sm text-muted-foreground text-center font-bold max-w-xs space-y-1">
+          {getCurrentDate()}
+        </div>
+        <img
+          src={authenticLogo}
+          alt="Authentic Insurance"
+          className="h-16 object-contain"
+        />
       </div>
-      <img
-        src={authenticLogo}
-        alt="Authentic Insurance"
-        className="h-16 object-contain"
-      />
     </div>
   );
 }

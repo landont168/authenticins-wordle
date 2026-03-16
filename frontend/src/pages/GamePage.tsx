@@ -157,7 +157,7 @@ function GameView({
           className="text-2xl font-black tracking-widest text-foreground text-center"
           onClick={() => navigate("/", { state: { skipRedirect: true } })}
         >
-          <span className="cursor-pointer hover:underline">WORDLE</span>
+          <span className="cursor-pointer hover:underline">Wordle</span>
         </h1>
         <div className="flex items-center justify-end gap-0.5">
           {WORD_LENGTHS.map((n) => (
