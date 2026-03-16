@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { getGame, submitGuess } from "@/api/client";
 import { GameStateResponse, GuessRecord } from "@/lib/schemas";
 import { getLetterStatuses, flipDuration, LetterStatus } from "@/lib/gameUtils";
+import { GAME_STATUS, SHAKE_DURATION_MS } from "@/lib/constants";
 
 export type { LetterStatus };
 
@@ -71,7 +72,7 @@ export function useGame(gameId: string) {
     },
     onError: (err: Error) => {
       setShaking(true);
-      setTimeout(() => setShaking(false), 600);
+      setTimeout(() => setShaking(false), SHAKE_DURATION_MS);
       toast.error(err.message);
       blockInput.current = false;
     },
@@ -83,7 +84,7 @@ export function useGame(gameId: string) {
 
   const handleKey = useCallback(
     (key: string) => {
-      if (!gameState || gameState.status !== "in_progress") return;
+      if (!gameState || gameState.status !== GAME_STATUS.IN_PROGRESS) return;
       if (blockInput.current) return;
 
       const wordLength = gameState.word_length;
@@ -91,7 +92,7 @@ export function useGame(gameId: string) {
       if (key === "Enter") {
         if (currentInput.length < wordLength) {
           setShaking(true);
-          setTimeout(() => setShaking(false), 600);
+          setTimeout(() => setShaking(false), SHAKE_DURATION_MS);
           toast.error("Not enough letters");
           return;
         }
@@ -100,7 +101,7 @@ export function useGame(gameId: string) {
         );
         if (alreadyGuessed) {
           setShaking(true);
-          setTimeout(() => setShaking(false), 600);
+          setTimeout(() => setShaking(false), SHAKE_DURATION_MS);
           toast.error("Already guessed that word");
           return;
         }

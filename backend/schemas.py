@@ -1,5 +1,7 @@
-from typing import Literal, Optional
+from typing import Optional
 from pydantic import BaseModel, field_validator
+
+from constants import GameStatus, MIN_WORD_LENGTH, MAX_WORD_LENGTH
 
 
 class CreateGameRequest(BaseModel):
@@ -8,16 +10,11 @@ class CreateGameRequest(BaseModel):
     @field_validator("word_length")
     @classmethod
     def validate_word_length(cls, v: int) -> int:
-        if not 5 <= v <= 8:
-            raise ValueError("word_length must be between 5 and 8")
+        if not MIN_WORD_LENGTH <= v <= MAX_WORD_LENGTH:
+            raise ValueError(
+                f"word_length must be between {MIN_WORD_LENGTH} and {MAX_WORD_LENGTH}"
+            )
         return v
-
-
-class GameCreateResponse(BaseModel):
-    game_id: str
-    word_length: int
-    max_guesses: int
-    status: str
 
 
 class SubmitGuessRequest(BaseModel):
@@ -26,7 +23,7 @@ class SubmitGuessRequest(BaseModel):
 
 class TileFeedback(BaseModel):
     letter: str
-    result: Literal["green", "yellow", "gray"]
+    result: str
 
 
 class GuessRecord(BaseModel):
@@ -34,18 +31,25 @@ class GuessRecord(BaseModel):
     feedback: list[TileFeedback]
 
 
+class GameCreateResponse(BaseModel):
+    game_id: str
+    word_length: int
+    max_guesses: int
+    status: GameStatus
+
+
 class GameStateResponse(BaseModel):
     game_id: str
     word_length: int
     max_guesses: int
     guesses_remaining: int
-    status: str
+    status: GameStatus
     guesses: list[GuessRecord]
-    word: Optional[str] = None  # revealed only when status is "won" or "lost"
+    word: Optional[str] = None  # revealed only when status is won or lost
 
 
 class GuessResponse(BaseModel):
     feedback: list[TileFeedback]
-    status: str
+    status: GameStatus
     guesses_remaining: int
-    word: Optional[str] = None  # revealed only when status is "won" or "lost"
+    word: Optional[str] = None  # revealed only when status is won or lost

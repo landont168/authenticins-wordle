@@ -10,8 +10,11 @@ import { useGame } from "@/hooks/useGame";
 import { useGameSession, WordLength, GameIds } from "@/hooks/useGameSession";
 import { WORD_LENGTHS } from "@/lib/gameStorage";
 import { cn } from "@/lib/utils";
-
-const HOW_TO_PLAY_KEY = "wordle_how_to_play_seen";
+import {
+  GAME_OVER_MODAL_DELAY_MS,
+  GAME_STATUS,
+  HOW_TO_PLAY_STORAGE_KEY,
+} from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // GamePage — owns session state, delegates UI to GameView
@@ -77,13 +80,13 @@ function GameView({
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!localStorage.getItem(HOW_TO_PLAY_KEY)) {
+    if (!localStorage.getItem(HOW_TO_PLAY_STORAGE_KEY)) {
       setShowHowToPlay(true);
     }
   }, []);
 
   function closeHowToPlay() {
-    localStorage.setItem(HOW_TO_PLAY_KEY, "1");
+    localStorage.setItem(HOW_TO_PLAY_STORAGE_KEY, "1");
     setShowHowToPlay(false);
   }
 
@@ -113,12 +116,12 @@ function GameView({
   // switching back to an already-finished game.
   const wasInProgressRef = useRef(false);
   useEffect(() => {
-    if (gameState?.status === "in_progress") wasInProgressRef.current = true;
+    if (gameState?.status === GAME_STATUS.IN_PROGRESS) wasInProgressRef.current = true;
   }, [gameState?.status]);
 
   useEffect(() => {
     if (isGameOver && animationDone && gameState && wasInProgressRef.current) {
-      const timer = setTimeout(() => setShowGameOver(true), 2000);
+      const timer = setTimeout(() => setShowGameOver(true), GAME_OVER_MODAL_DELAY_MS);
       return () => clearTimeout(timer);
     }
   }, [isGameOver, animationDone, gameState]);
@@ -127,11 +130,11 @@ function GameView({
     <div className="min-h-screen flex flex-col items-center gap-4 p-4 bg-background">
       <HowToPlayModal open={showHowToPlay} onClose={closeHowToPlay} />
       {gameState &&
-        (gameState.status === "won" || gameState.status === "lost") && (
+        (gameState.status === GAME_STATUS.WON || gameState.status === GAME_STATUS.LOST) && (
           <GameOverModal
             open={showGameOver}
             onClose={() => setShowGameOver(false)}
-            status={gameState.status as "won" | "lost"}
+            status={gameState.status as typeof GAME_STATUS.WON | typeof GAME_STATUS.LOST}
             guesses={gameState.guesses}
             maxGuesses={gameState.max_guesses}
             wordLength={gameState.word_length}

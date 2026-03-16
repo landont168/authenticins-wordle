@@ -57,3 +57,8 @@ def check_win(feedback: list[Feedback]) -> bool:
 def check_loss(guess_count: int, max_guesses: int) -> bool:
     """Return True if the player has used all their guesses without winning."""
     return guess_count >= max_guesses
+
+
+def max_guesses_for_length(word_length: int) -> int:
+    """Return the maximum number of guesses allowed for a given word length."""
+    return word_length + 1

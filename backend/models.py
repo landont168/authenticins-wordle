@@ -4,6 +4,8 @@ from datetime import datetime
 from sqlalchemy import Column, String, Integer, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, relationship
 
+from constants import GameStatus
+
 
 class Base(DeclarativeBase):
     pass
@@ -15,7 +17,7 @@ class Game(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     word_length = Column(Integer, nullable=False)
     target_word = Column(String, nullable=False)
-    status = Column(String, nullable=False, default="in_progress")
+    status = Column(String, nullable=False, default=GameStatus.IN_PROGRESS)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     guesses = relationship(
