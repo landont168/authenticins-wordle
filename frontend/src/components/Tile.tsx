@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { TILE_POP_DURATION_MS } from "@/lib/constants";
 
 type TileState = "empty" | "filled" | "green" | "yellow" | "gray";
 
@@ -34,7 +35,7 @@ export function Tile({ letter, state, flipDelay = 0, isRevealing = false }: Tile
     // Only pop when a letter is newly added (not on backspace or clear)
     if (letter && !prevLetterRef.current) {
       setPopping(true);
-      const t = setTimeout(() => setPopping(false), 100);
+      const t = setTimeout(() => setPopping(false), TILE_POP_DURATION_MS);
       return () => clearTimeout(t);
     }
     prevLetterRef.current = letter;
