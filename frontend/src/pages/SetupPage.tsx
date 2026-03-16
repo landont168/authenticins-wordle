@@ -1,13 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { useCreateGame } from "@/hooks/useCreateGame";
+import wordleIcon from "@/assets/wordle-icon.png";
+import authenticLogo from "@/assets/authentic-insurance.jpg";
 
 export function SetupPage() {
   const createGame = useCreateGame();
 
+  function getCurrentDate() {
+    const date = new Date();
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-4 bg-background">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-5xl font-black tracking-widest uppercase text-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4 bg-background">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <img src={wordleIcon} alt="Wordle Logo" className="w-16 h-16" />
+        <h1 className="text-5xl font-black tracking-widest text-foreground">
           Wordle
         </h1>
         <p className="text-muted-foreground text-sm">
@@ -26,11 +38,14 @@ export function SetupPage() {
         {createGame.isPending ? "Starting..." : "Play Game"}
       </Button>
 
-      <div className="text-xs text-muted-foreground text-center max-w-xs space-y-1">
-        <p>🟩 Right letter, right place</p>
-        <p>🟨 Right letter, wrong place</p>
-        <p>⬜ Letter not in word</p>
+      <div className="text-sm text-muted-foreground text-center font-bold max-w-xs space-y-1">
+        {getCurrentDate()}
       </div>
+      <img
+        src={authenticLogo}
+        alt="Authentic Insurance"
+        className="h-16 object-contain"
+      />
     </div>
   );
 }
