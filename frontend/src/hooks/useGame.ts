@@ -67,9 +67,6 @@ export function useGame(gameId: string) {
         setRevealingRowIndex(null);
         blockInput.current = false;
 
-        if (data.status === "won") {
-          toast.success("Brilliant! You got it! 🎉");
-        }
       }, duration);
     },
     onError: (err: Error) => {

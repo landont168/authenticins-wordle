@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   GameCreateResponse,
   GameCreateResponseSchema,
@@ -7,47 +8,31 @@ import {
   GuessResponseSchema,
 } from "@/lib/schemas";
 
-const API_URL = "http://localhost:8000";
+const api = axios.create({
+  baseURL: "http://localhost:8000",
+  headers: { "Content-Type": "application/json" },
+});
 
-async function request<T>(
-  path: string,
-  options?: RequestInit
-): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    // Surface the descriptive error message from the backend
-    throw new Error(data?.detail ?? `Request failed: ${res.status}`);
+// Surface backend error detail messages
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const message = err.response?.data?.detail ?? err.message;
+    return Promise.reject(new Error(message));
   }
-
-  return data as T;
-}
+);
 
 export async function createGame(wordLength: number): Promise<GameCreateResponse> {
-  const data = await request<unknown>("/games", {
-    method: "POST",
-    body: JSON.stringify({ word_length: wordLength }),
-  });
+  const { data } = await api.post("/games", { word_length: wordLength });
   return GameCreateResponseSchema.parse(data);
 }
 
 export async function getGame(gameId: string): Promise<GameStateResponse> {
-  const data = await request<unknown>(`/games/${gameId}`);
+  const { data } = await api.get(`/games/${gameId}`);
   return GameStateResponseSchema.parse(data);
 }
 
-export async function submitGuess(
-  gameId: string,
-  guess: string
-): Promise<GuessResponse> {
-  const data = await request<unknown>(`/games/${gameId}/guesses`, {
-    method: "POST",
-    body: JSON.stringify({ guess }),
-  });
+export async function submitGuess(gameId: string, guess: string): Promise<GuessResponse> {
+  const { data } = await api.post(`/games/${gameId}/guesses`, { guess });
   return GuessResponseSchema.parse(data);
 }

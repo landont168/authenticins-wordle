@@ -181,8 +181,8 @@ function GameView({
         </div>
       </header>
 
-      {/* Answer pill — shown on loss */}
-      {gameState?.status === "lost" && animationDone && (
+      {/* Answer pill — shown on game over */}
+      {isGameOver && animationDone && gameState?.word && (
         <div className="answer-popup fixed top-20 inset-x-0 mx-auto w-fit z-50 bg-foreground text-background text-sm font-bold px-4 py-2 rounded-lg shadow-md tracking-widest uppercase whitespace-nowrap">
           {gameState.word}
         </div>

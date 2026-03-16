@@ -1,7 +1,5 @@
 import random
 import uuid
-from datetime import datetime, timedelta
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -22,15 +20,8 @@ from words import get_words_for_length, is_valid_word
 router = APIRouter(prefix="/games", tags=["games"])
 
 
-def _cleanup_stale_games(db: Session, ttl_days: int = 7) -> None:
-    """Delete games older than ttl_days, regardless of status."""
-    cutoff = datetime.utcnow() - timedelta(days=ttl_days)
-    db.query(Game).filter(Game.created_at < cutoff).delete(synchronize_session=False)
-
-
 @router.post("", status_code=201, response_model=GameCreateResponse)
 def create_game(request: CreateGameRequest, db: Session = Depends(get_db)):
-    _cleanup_stale_games(db)
 
     words = get_words_for_length(request.word_length)
     if not words:
