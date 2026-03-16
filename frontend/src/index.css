@@ -79,6 +79,17 @@
   }
 }
 
+/* Tile pop on letter input */
+@keyframes tile-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.tile-pop {
+  animation: tile-pop 0.1s ease-in-out;
+}
+
 /* Tile flip animation */
 @keyframes tile-flip {
   0% {

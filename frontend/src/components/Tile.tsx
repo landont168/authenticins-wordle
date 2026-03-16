@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type TileState = "empty" | "filled" | "green" | "yellow" | "gray";
@@ -26,16 +27,27 @@ const targetColors: Record<TileState, string> = {
 };
 
 export function Tile({ letter, state, flipDelay = 0, isRevealing = false }: TileProps) {
+  const [popping, setPopping] = useState(false);
+  const prevLetterRef = useRef(letter);
+
+  useEffect(() => {
+    // Only pop when a letter is newly added (not on backspace or clear)
+    if (letter && !prevLetterRef.current) {
+      setPopping(true);
+      const t = setTimeout(() => setPopping(false), 100);
+      return () => clearTimeout(t);
+    }
+    prevLetterRef.current = letter;
+  }, [letter]);
+
   return (
     <div
       className={cn(
         "flex items-center justify-center",
         "w-14 h-14 text-2xl font-bold uppercase select-none",
-        "transition-transform",
-        // While revealing, show the pre-flip (filled) appearance so the color
-        // is hidden until the animation snaps it in at the 50% keyframe.
         isRevealing ? stateStyles["filled"] : stateStyles[state],
-        isRevealing && "tile-flip"
+        isRevealing && "tile-flip",
+        popping && "tile-pop"
       )}
       style={
         isRevealing
