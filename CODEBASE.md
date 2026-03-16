@@ -75,7 +75,7 @@ authenticins-wordle/
 | GET | `/games/{game_id}` | Get full game state |
 | POST | `/games/{game_id}/guesses` | Submit a guess |
 
-**POST /games** — Runs `_cleanup_stale_games()` (deletes games >7 days old), picks a random word, returns `game_id`, `word_length`, `max_guesses` (= word_length + 1).
+**POST /games** — Picks a random word, returns `game_id`, `word_length`, `max_guesses` (= word_length + 1).
 
 **POST /games/{id}/guesses** — Validates guess length, word validity, no duplicates. Computes feedback, updates status to `won`/`lost` if applicable. Returns `feedback`, `status`, `guesses_remaining`, and `word` (only revealed on game end).
 
@@ -190,7 +190,6 @@ Wordle (5 letters) 4/6
 - **Game over modal** — Fades in 2s after game ends, only on fresh completion (not on revisit).
 - **Answer pill** — Floating pill shows the answer after game ends (win or loss).
 - **Share button** — Copies emoji grid to clipboard.
-- **Stale game cleanup** — Backend deletes games older than 7 days on each new game creation.
 - **Header navigation** — Click "Wordle" to return to home without being redirected back.
 - **How to Play** — First-visit modal explaining rules and tile colours.
 - **Gilroy font** — Custom font via `@font-face` (Light + ExtraBold weights).
