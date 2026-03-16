@@ -1,5 +1,9 @@
 # Wordle Full Stack Assessment
 
+## Demo
+
+https://github.com/user-attachments/assets/0be57f58-5272-4435-90df-e69b0394c05e
+
 ## Background
 
 Wordle is a simple game in which you have to guess a five-letter word. You get six guesses, learning a little more information with each guess, and eventually narrow your guesses down to find the answer.
